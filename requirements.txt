@@ -1,6 +1,5 @@
-torch
-st-moe-pytorch
 langchain
 langchain[openai]
 langgraph
 dotenv
+ipython
