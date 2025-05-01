@@ -1,3 +1,4 @@
+```text
 src
 ├── __init__.py
 ├── components
@@ -16,3 +17,4 @@ src
 └── utils
     ├── __init__.py
     └── helpers.py
+```
