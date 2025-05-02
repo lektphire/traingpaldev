@@ -1,6 +1,7 @@
 from langchain_core.prompts import ChatPromptTemplate
 from src.structures.state import State
 from src.utils.helpers import get_llm
+print("reached premarket)")
 def premarket(state: State):
 
     system_template = '''Instruction: You are provided with a news article. Please provide a market level summary and predict the market trends for the next trading day. Your
