@@ -15,7 +15,7 @@ You are a routing assistant for a stock market chatbot. Your job is to analyze t
 
 Instructions:
 
-- Respond with one or more space-separated agent names. 
+- Respond with one or more space-separated agent names in a format like this: "premarket strategy".
 - Do not have duplicate names.
 - If you include human_clarification, it must be the only agent selected. 
 - If human_clarification is selected, include a follow-up question on the second line. If necessary, acknowledge what the user has said and gently remind the user that you're specifically designed as a trading assistant that can assist with premarket, intraday, postmarket, and strategy inquiries.
@@ -28,35 +28,32 @@ def chatbot(state: State):
     prompt = [SystemMessage(chatbot_instructions)] + state["messages"]
     ans = get_llm().invoke(prompt).content
     print(ans)
-    # if "human_clarification" in ans:
-    #     return Command(
-    #         update={"messages": [ans.splitlines()[1]]},
-    #         goto="human_clarification",
-    #     )
-    # else:
-    #     expert_names = ans.strip().split()
-    #     while(not all(expert in valid_experts for expert in expert_names)
-    #           or len(expert_names) > len(set(expert_names))):
-    #         ans = get_llm().invoke(prompt).content
-    #     print(expert_names)
-    #     return Command(
-    #         goto=expert_names
-    #     )
-
-
-
-def human_clarification(state: State, config):
-    print("---------Human Clarification---------")
-    clarification = ""
-    if "interrupts" in config and config["interrupts"]:
-        clarification = config["interrupts"][0].get("value", "").strip()
-
-    if clarification:
-        return {
-            "messages": state["messages"] + [HumanMessage(content=clarification)]
-        }
+    if "human_clarification" in ans:
+        return Command(
+            update={"messages": [ans.splitlines()[1]]},
+            goto="human_clarification",
+        )
     else:
-        print("No clarification input received. Reusing existing messages.")
-        return {
-            "messages": state["messages"]
-        }
+        expert_names = ans.strip().split()
+
+        # clean data
+        valid_experts_selected = []
+        for expert in expert_names:
+            if expert in valid_experts and expert not in valid_experts_selected:
+                valid_experts_selected.append(expert)
+
+        if not valid_experts_selected:
+            print("No valid experts found, routing to human clarification.")
+            clarification_message = "Could you please clarify your request? I can assist with premarket, intraday, postmarket, and strategy inquiries."
+            return Command(
+                update={"messages": [clarification_message]},
+                goto="human_clarification"  # Route to human clarification
+            )
+
+        print(f"Routing to experts: {valid_experts_selected}")
+
+        return Command(
+            goto=valid_experts_selected
+        )
+
+
